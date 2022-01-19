@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CC Timeline</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <div id="content">
+
+    </div>
+
+    <button class="add-event" id="add">
+        +
+    </button>
+
+    <div class="center-container" id="event-edit-dialog">
+        <div class="event-edit" id="event-edit-form">
+            <div>
+                Add/Update Event
+            </div>
+            <label for="name">Name</label>
+            <input name="name" type="text" id="event-edit-name">
+            <label for="start">Start</label>
+            <input name="start" type="text" id="event-edit-start" placeholder="Example: 1000 AD">
+            <label for="end">End</label>
+            <input name="end" type="text" id="event-edit-end" placeholder="Example: 1100 AD">
+            <label for="tags">Tags</label>
+            <input name="tags" type="text" id="event-edit-tags" placeholder="tag1, tag2, etc.">
+            <label for="increment">Show at increment</label>
+            <select name="increment" id="event-edit-increment">
+                <option>2000</option>
+                <option>1000</option>
+                <option>500</option>
+                <option>250</option>
+                <option>100</option>
+                <option>50</option>
+                <option>25</option>
+                <option>10</option>
+                <option>5</option>
+                <option>2</option>
+                <option>1</option>
+            </select>
+            <div class="error" id="event-edit-error">
+
+            </div>
+            <div class="actions">
+                <button id="event-edit-submit">
+                    Add/Update
+                </button>
+                <button id="event-edit-cancel">
+                    Cancel
+                </button>
+                <button id="event-edit-delete">
+                    Delete
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <script src="/api/events.js"></script>
+
+    <script src="./index.js" type="module"></script>
+</body>
+
+</html>
