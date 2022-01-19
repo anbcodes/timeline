@@ -15,7 +15,7 @@ const username = Deno.env.get("TIMELINE_USERNAME");
 
 if (!password || !username) {
   throw new Error(
-    "Username and password required (Specify with TIMELINE_PASSWORD and TIMELINE_USERNAME)",
+    `Username and password required (Specify with TIMELINE_PASSWORD and TIMELINE_USERNAME). Got ${password} for password and ${username} for username`,
   );
 }
 
