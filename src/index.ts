@@ -5,6 +5,12 @@ import "./grabbing.ts";
 import "./zooming.ts";
 import "./server.ts";
 import "./eventEditorController.ts";
+import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
+
+const date = DateTime.fromObject({
+  year: -1100,
+});
+console.log(date.toSeconds());
 
 const offset = +(localStorage.getItem("offset") ?? NaN);
 console.log(offset);

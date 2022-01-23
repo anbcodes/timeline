@@ -1,5 +1,5 @@
 import { eventEditor } from "./elements.ts";
-import { formatYear, stopPropagation } from "./util.ts";
+import { stopPropagation } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
 import { addEvent, removeEvent, updateEvent } from "./server.ts";
 
@@ -40,8 +40,9 @@ const updateDisplay = () => {
 
   if (currentlyEditing) {
     eventEditor.name.value = currentlyEditing.name;
-    eventEditor.start.value = formatYear(currentlyEditing.start);
-    eventEditor.end.value = formatYear(currentlyEditing.end);
+    // TODO: Implement the ui
+    eventEditor.start.value = currentlyEditing.start.toString(10);
+    eventEditor.end.value = currentlyEditing.end.toString(10);
     eventEditor.tags.value = currentlyEditing.tags.join(", ");
     eventEditor.increment.value = currentlyEditing.visible.toString(10);
 

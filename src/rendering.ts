@@ -1,9 +1,10 @@
 import { YEAR_RANGE } from "./consts.ts";
 import { content } from "./elements.ts";
-import { formatYear, stopPropagation } from "./util.ts";
+import { formatDate, stopPropagation, yearSeconds } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
 import { startEventUpdate } from "./eventEditorController.ts";
 import { makeNoise2D } from "https://deno.land/x/open_simplex_noise/mod.ts";
+import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
 
 declare global {
   interface Window {
@@ -15,7 +16,7 @@ export let scale = +(localStorage.getItem("scale") || 1);
 
 const noise = makeNoise2D(272727);
 
-const calcYearInc = () => {
+export const calcYearInc = () => {
   let yearInc = 2000;
   const fiveXs = Math.floor(scale / 3);
   yearInc = yearInc / 2 / fiveXs;
@@ -31,13 +32,21 @@ const calcYearInc = () => {
     5,
     2,
     1,
+    1 / 12,
+    1 / 365,
   ];
-  let closest = 2000;
+  let closestNum = 2000;
   increments.forEach((inc) => {
-    if (Math.abs(yearInc - inc) < Math.abs(yearInc - closest)) {
-      closest = inc;
+    if (Math.abs(yearInc - inc) < Math.abs(yearInc - closestNum)) {
+      closestNum = inc;
     }
   });
+  let closest: number | string = closestNum;
+  if (closest === 1 / 12) {
+    closest = "month";
+  } else if (closest === 1 / 365) {
+    closest = "day";
+  }
   return closest;
 };
 
@@ -56,12 +65,12 @@ const compileEventToHTML = (
   const date = part === "start" ? event.start : event.end;
   let html = "";
   html += `<div>${prefix}${event.name}</div>`;
-  html += `<div>${formatYear(date)}</div>`;
+  html += `<div>${formatDate(date)}</div>`;
 
   html += '<div class="hover">';
   const events = (Object.values(window.timelineEvents) as TimelineEvent[])
     .filter((v) => v.start < date && v.end > date).map((v) =>
-      `<li>${v.name} (${formatYear(v.start)} - ${formatYear(v.end)})</li>`
+      `<li>${v.name} (${formatDate(v.start)} - ${formatDate(v.end)})</li>`
     );
   if (events.length !== 0) {
     html += "<div>During:</div>";
@@ -75,31 +84,18 @@ const compileEventToHTML = (
   return html;
 };
 
-const hash = (str: string) => {
-  let h = 1779033703 ^ str.length;
-  for (let i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
-    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-    h = h << 13 | h >>> 19;
-  }
-  return function () {
-    h = Math.imul(h ^ (h >>> 16), 2246822507);
-    h = Math.imul(h ^ (h >>> 13), 3266489909);
-    return (h ^= h >>> 16) >>> 0;
-  };
-};
-
 const makeEvent = (
-  year: number,
+  time: number,
   id: number,
   event: TimelineEvent,
   part?: "start" | "end",
 ) => {
-  const eventPosStartPercent = (year - YEAR_RANGE[0]) /
+  const eventPosStartPercent = (time - YEAR_RANGE[0]) /
     (YEAR_RANGE[1] - YEAR_RANGE[0]);
 
   const line = document.createElement("div");
   line.className = "eventline";
-  const height = (noise(year, 0) + 1) / 2 * 50;
+  const height = (noise(time, 0) + 1) / 2 * 50;
   line.style.height = `${height}vh`;
   line.style.left = `${eventPosStartPercent * scale * 100}vw`;
   line.style.top = `${70 - height}vh`;
@@ -146,28 +142,48 @@ export const render = () => {
   content.appendChild(line);
 
   const yearInc = calcYearInc();
+  console.log("inc", yearInc);
 
-  const vwMin = (document.documentElement.scrollLeft - 100) /
-    document.documentElement.clientWidth;
+  const minViewPercent = (document.documentElement.scrollLeft - 100) /
+    (document.documentElement.clientWidth * scale);
 
-  const vwMax =
+  const maxViewPercent =
     (document.documentElement.scrollLeft + window.screen.width + 100) /
-    document.documentElement.clientWidth;
+    (document.documentElement.clientWidth * scale);
 
-  for (let year = YEAR_RANGE[0]; year < YEAR_RANGE[1]; year += yearInc) {
-    if (year < YEAR_RANGE[0] + 500 || year > YEAR_RANGE[1] - 500) {
+  const totalSeconds = (YEAR_RANGE[1] - YEAR_RANGE[0]);
+
+  let yearMin = (minViewPercent * totalSeconds + YEAR_RANGE[0]);
+  const yearMax = (maxViewPercent * totalSeconds + YEAR_RANGE[0]);
+
+  const yearMinYears =
+    Math.round(DateTime.fromSeconds(yearMin).year / yearInc) *
+    yearInc;
+
+  yearMin = DateTime.fromObject({ year: yearMinYears }).toSeconds();
+
+  for (
+    let year = DateTime.fromSeconds(yearMin);
+    year.toSeconds() < yearMax;
+    year = year.plus({ years: yearInc })
+  ) {
+    if (
+      year.minus({ years: 500 }).toSeconds() < YEAR_RANGE[0] ||
+      year.plus({ years: 500 }).toSeconds() > YEAR_RANGE[1]
+    ) {
       continue;
     }
 
-    const pos = (year - YEAR_RANGE[0]) /
+    const dateLeftPercent = (year.toSeconds() - YEAR_RANGE[0]) /
       (YEAR_RANGE[1] - YEAR_RANGE[0]);
-    if (pos * scale < vwMax && pos * scale > vwMin) {
+    if (
+      dateLeftPercent > minViewPercent &&
+      dateLeftPercent < maxViewPercent
+    ) {
       const yearText = document.createElement("div");
-      yearText.textContent = `${Math.round(Math.abs(year) * 10) / 10} ${
-        year >= 0 ? "AD" : "BC"
-      }`;
+      yearText.textContent = formatDate(year.toSeconds());
       yearText.className = "year";
-      yearText.style.left = `calc(${pos * scale * 100}vw - 2.5rem)`;
+      yearText.style.left = `calc(${dateLeftPercent * scale * 100}vw - 2.5rem)`;
       yearText.addEventListener("pointerdown", stopPropagation);
       yearText.addEventListener("pointerup", stopPropagation);
       content.appendChild(yearText);
@@ -176,7 +192,7 @@ export const render = () => {
       yearLine.className = "eventline";
       yearLine.style.height = "4vh";
       yearLine.style.top = `70vh`;
-      yearLine.style.left = `${pos * scale * 100}vw`;
+      yearLine.style.left = `${dateLeftPercent * scale * 100}vw`;
       content.appendChild(yearLine);
     }
   }
