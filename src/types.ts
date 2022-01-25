@@ -3,5 +3,4 @@ export interface TimelineEvent {
   start: number;
   end: number;
   tags: string[];
-  visible: number;
 }

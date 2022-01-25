@@ -205,7 +205,7 @@ const createEventCardElement = (name: string, seconds: number, concurrentEvents:
   const text = document.createElement("div");
   text.innerHTML = html;
   text.className = "eventtext";
-  text.style.left = `calc(${secondsToOffsetInPixels}px - 2.5rem)`;
+  text.style.left = `calc(${secondsToOffsetInPixels(seconds)}px - 2.5rem)`;
   text.style.top = `calc(${70 - lineHeight}vh - 5rem)`;
   
 

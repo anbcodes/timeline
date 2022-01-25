@@ -26,25 +26,13 @@
             <label for="name">Name</label>
             <input name="name" type="text" id="event-edit-name">
             <label for="start">Start</label>
-            <input name="start" type="text" id="event-edit-start" placeholder="Example: 1000 AD">
+            <input name="start" type="datetime-local" id="event-edit-start">
+            <button id="start-BC-AD-button" class="BC-AD-btn"></button>
             <label for="end">End</label>
-            <input name="end" type="text" id="event-edit-end" placeholder="Example: 1100 AD">
+            <input name="end" type="datetime-local" id="event-edit-end">
+            <button id="end-BC-AD-button" class="BC-AD-btn"></button>
             <label for="tags">Tags</label>
             <input name="tags" type="text" id="event-edit-tags" placeholder="tag1, tag2, etc.">
-            <label for="increment">Show at increment</label>
-            <select name="increment" id="event-edit-increment">
-                <option>2000</option>
-                <option>1000</option>
-                <option>500</option>
-                <option>250</option>
-                <option>100</option>
-                <option>50</option>
-                <option>25</option>
-                <option>10</option>
-                <option>5</option>
-                <option>2</option>
-                <option>1</option>
-            </select>
             <div class="error" id="event-edit-error">
 
             </div>

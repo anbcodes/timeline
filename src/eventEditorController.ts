@@ -2,6 +2,7 @@ import { eventEditor } from "./elements.ts";
 import { stopPropagation } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
 import { addEvent, removeEvent, updateEvent } from "./server.ts";
+import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
 
 let displayDialog = false;
 let currentlyEditing: (TimelineEvent & { id?: number }) | undefined;
@@ -11,10 +12,9 @@ export const startEventCreation = () => {
   eventEditor.error.textContent = "";
   currentlyEditing = {
     name: "",
-    start: 0,
-    end: 0,
+    start: +(localStorage.getItem('startSeconds') || 0),
+    end: +(localStorage.getItem('endSeconds') || 0),
     tags: [],
-    visible: 2000,
   };
   updateDisplay();
 };
@@ -29,6 +29,17 @@ export const startEventUpdate = (id: number, event: TimelineEvent) => {
   updateDisplay();
 };
 
+const formatDate = (seconds: number) => {
+  let datetime = DateTime.fromSeconds(seconds);
+  if (datetime.get('year') <= 0) {
+    datetime = datetime.set({
+      year: -datetime.get('year') + 1
+    })
+  }
+
+  return datetime.toISO({includeOffset: false});
+}
+
 const updateDisplay = () => {
   if (displayDialog) {
     eventEditor.dialog.style.opacity = "1";
@@ -41,10 +52,11 @@ const updateDisplay = () => {
   if (currentlyEditing) {
     eventEditor.name.value = currentlyEditing.name;
     // TODO: Implement the ui
-    eventEditor.start.value = currentlyEditing.start.toString(10);
-    eventEditor.end.value = currentlyEditing.end.toString(10);
+    eventEditor.start.value = formatDate(currentlyEditing.start);
+    eventEditor.end.value = formatDate(currentlyEditing.end);
+    eventEditor.startBCAD.textContent = DateTime.fromSeconds(currentlyEditing.start).get('year') > 0 ? 'AD' : 'BC'
+    eventEditor.endBCAD.textContent = DateTime.fromSeconds(currentlyEditing.end).get('year') > 0 ? 'AD' : 'BC'
     eventEditor.tags.value = currentlyEditing.tags.join(", ");
-    eventEditor.increment.value = currentlyEditing.visible.toString(10);
 
     if (currentlyEditing.id === undefined) {
       eventEditor.delete.style.visibility = "hidden";
@@ -54,33 +66,35 @@ const updateDisplay = () => {
   }
 };
 
-const parseYear = (year: string): number => {
-  const parts = year.split(" ");
-  if (parts.length > 2) {
-    return NaN;
+const parseYear = (year: string, part: string): number => {
+  let datetime = DateTime.fromISO(year);
+
+  if (part === 'BC') {
+    datetime = datetime.set({
+      year: -datetime.get('year') + 1
+    })
   }
-  const number = +parts[0];
-  return parts[1] === "AD" ? number : parts[1] === "BC" ? -number : NaN;
+
+  return datetime.toSeconds();
 };
 
 const updateCurrentlyEditing = (): string => {
   const name = eventEditor.name.value;
-  const start = parseYear(eventEditor.start.value);
+  const start = parseYear(eventEditor.start.value, eventEditor.startBCAD.textContent || 'AD');
   if (isNaN(start)) {
     return "Invaild start year: " + eventEditor.start.value;
   }
 
-  const end = parseYear(eventEditor.end.value);
+  const end = parseYear(eventEditor.end.value,  eventEditor.endBCAD.textContent || 'AD');
   if (isNaN(end)) {
     return "Invaild end year: " + eventEditor.end.value;
   }
 
-  const tags = eventEditor.tags.value.split(",").map((v) => v.trim());
-
-  const increment = +eventEditor.increment.value;
-  if (isNaN(increment)) {
-    return "Invaild increment: " + eventEditor.increment.value;
+  if (end < start) {
+    return "Invaild dates: the end date cannot be less then the start date"
   }
+
+  const tags = eventEditor.tags.value.split(",").map((v) => v.trim());
 
   currentlyEditing = {
     id: currentlyEditing?.id,
@@ -88,8 +102,9 @@ const updateCurrentlyEditing = (): string => {
     start,
     end,
     tags,
-    visible: increment,
   };
+  localStorage.setItem('startSeconds', currentlyEditing.start.toString(10));
+  localStorage.setItem('endSeconds', currentlyEditing.end.toString(10));
   return "";
 };
 
@@ -143,3 +158,19 @@ eventEditor.delete.addEventListener("click", () => {
   displayDialog = false;
   updateDisplay();
 });
+
+eventEditor.startBCAD.addEventListener("click", () => {
+  if (eventEditor.startBCAD.textContent === 'BC') {
+    eventEditor.startBCAD.textContent = 'AD';
+  } else {
+    eventEditor.startBCAD.textContent = 'BC';
+  }
+})
+
+eventEditor.endBCAD.addEventListener("click", () => {
+  if (eventEditor.endBCAD.textContent === 'BC') {
+    eventEditor.endBCAD.textContent = 'AD';
+  } else {
+    eventEditor.endBCAD.textContent = 'BC';
+  }
+})
