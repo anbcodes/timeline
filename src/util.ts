@@ -31,5 +31,29 @@ export const formatSeconds = (date: number, increment = calcYearInc()) => {
     });
   }
 
+  if (increment.hours >= 1) {
+    formattedDate = datetime.toLocaleString({
+      hour12: true,
+      hour: 'numeric',
+    });
+  }
+
+  if (increment.minutes >= 1) {
+    formattedDate = datetime.toLocaleString({
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+
+  if (increment.seconds >= 1) {
+    formattedDate = datetime.toLocaleString({
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  }
+
   return formattedDate;
 };

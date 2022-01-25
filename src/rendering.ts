@@ -72,6 +72,19 @@ export const getYearIncrements = () => {
     [1 / 12, Duration.fromObject({months: 1})],
     [1 / 12 / 4, Duration.fromObject({weeks: 1})],
     [1 / 365, Duration.fromObject({days: 1})],
+    [1 / 365 / 4, Duration.fromObject({hours: 6})],
+    [1 / 365 / 8, Duration.fromObject({hours: 3})],
+    [1 / 365 / 24, Duration.fromObject({hours: 1})],
+    [1 / 365 / 24 / 2, Duration.fromObject({minutes: 30})],
+    [1 / 365 / 24 / 4, Duration.fromObject({minutes: 15})],
+    [1 / 365 / 24 / 6, Duration.fromObject({minutes: 10})],
+    [1 / 365 / 24 / 12, Duration.fromObject({minutes: 5})],
+    [1 / 365 / 24 / 60, Duration.fromObject({minutes: 1})],
+    [1 / 365 / 24 / 60 / 2, Duration.fromObject({seconds: 30})],
+    [1 / 365 / 24 / 60 / 4, Duration.fromObject({seconds: 15})],
+    [1 / 365 / 24 / 60 / 6, Duration.fromObject({seconds: 10})],
+    [1 / 365 / 24 / 60 / 12, Duration.fromObject({seconds: 5})],
+    [1 / 365 / 24 / 60 / 60, Duration.fromObject({seconds: 1})],
   ];
 
   // let values = increments.filter(v => v[0] >= yearInc).map(v => v[1]);
@@ -295,7 +308,41 @@ const roundSecondsUsingDuration = (seconds: number, duration: Duration, rounding
       year: datetime.get('year'),
       month: datetime.get('month'),
       day: 1
-    }).plus({day: day - 1}).toSeconds();
+    }).plus({days: day - 1}).toSeconds();
   }
+
+  if (duration.hours >= 1) {
+    const hours = roundingFunc(datetime.get('hour') / duration.hours) * duration.hours;
+    return DateTime.fromObject({
+      year: datetime.get('year'),
+      month: datetime.get('month'),
+      day: datetime.get('day'),
+      hour: 0
+    }).plus({hours: hours}).toSeconds();
+  }
+
+  if (duration.minutes >= 1) {
+    const minutes = roundingFunc(datetime.get('minute') / duration.minutes) * duration.minutes;
+    return DateTime.fromObject({
+      year: datetime.get('year'),
+      month: datetime.get('month'),
+      day: datetime.get('day'),
+      hour: datetime.get('hour'),
+      minute: 0,
+    }).plus({minutes: minutes}).toSeconds();
+  }
+
+  if (duration.seconds >= 1) {
+    const seconds = roundingFunc(datetime.get('second') / duration.seconds) * duration.seconds;
+    return DateTime.fromObject({
+      year: datetime.get('year'),
+      month: datetime.get('month'),
+      day: datetime.get('day'),
+      hour: datetime.get('hour'),
+      minute: datetime.get('minute'),
+      second: 0,
+    }).plus({seconds: seconds}).toSeconds();
+  }
+
   throw Error();
 }
