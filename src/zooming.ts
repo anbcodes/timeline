@@ -1,5 +1,5 @@
 import { ZOOM_SPEED } from "./consts.ts";
-import { scale, setScale } from "./rendering.ts";
+import { scale, setScale, setOffset, offset, render } from "./rendering.ts";
 
 let mouseX = 0;
 
@@ -8,7 +8,7 @@ addEventListener("pointermove", (ev) => {
 });
 
 addEventListener("wheel", (ev) => {
-  const scrollLeft = window.document.documentElement.scrollLeft;
+  const scrollLeft = offset;
   if (ev.deltaY < 0) {
     const totalTimelinePx = window.document.documentElement.clientWidth;
     const offsetPercent = (mouseX + scrollLeft) / totalTimelinePx;
@@ -16,7 +16,8 @@ addEventListener("wheel", (ev) => {
     const newOffset = offsetPercent * newTotalTimelinePx;
     const newPos = newOffset - mouseX;
     setScale(scale * ZOOM_SPEED);
-    window.scrollTo(newPos, 0);
+    setOffset(newPos);
+    // window.scrollTo(newPos, 0);
   } else {
     const totalTimelinePx = window.document.documentElement.clientWidth;
     const offsetPercent = (mouseX + scrollLeft) / totalTimelinePx;
@@ -24,6 +25,8 @@ addEventListener("wheel", (ev) => {
     const newOffset = offsetPercent * newTotalTimelinePx;
     const newPos = newOffset - mouseX;
     setScale(scale / ZOOM_SPEED);
-    window.scrollTo(newPos, 0);
+    setOffset(newPos);
+    // window.scrollTo(newPos, 0);
   }
+  render();
 });

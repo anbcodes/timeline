@@ -11,29 +11,23 @@ export const yearSeconds = (year: number) => {
   }).toSeconds();
 };
 
-export const formatDate = (date: number) => {
+export const formatSeconds = (date: number, increment = calcYearInc()) => {
   const datetime = DateTime.fromSeconds(date);
   const suffix = datetime.year > 0 ? "AD" : "BC";
   let formattedDate = datetime.toLocaleString({
     year: "numeric",
   }) + " " + suffix;
-  const increment = calcYearInc();
-  if (increment === "month") {
+  if (increment.months >= 1) {
     formattedDate = datetime.toLocaleString({
       year: "numeric",
-      month: "narrow",
-      day: "numeric",
+      month: "short",
     });
   }
 
-  if (increment === "day") {
+  if (increment.days >= 1 || increment.weeks >= 1) {
     formattedDate = datetime.toLocaleString({
-      month: "narrow",
+      month: "short",
       day: "numeric",
-      hour: "numeric",
-      hour12: true,
-      minute: "numeric",
-      second: "numeric",
     });
   }
 

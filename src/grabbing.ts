@@ -1,12 +1,14 @@
 import { content } from "./elements.ts";
-
+import { setOffset, offset, render } from './rendering.ts';
 let mouseX = 0;
 let dragging = false;
 let dragVel = 0;
 
 const dragFrame = () => {
   if (dragVel !== 0 && !dragging) {
-    window.scrollTo(document.documentElement.scrollLeft + dragVel, 0);
+    setOffset(offset + dragVel);
+    render();
+    // window.scrollTo(document.documentElement.scrollLeft + dragVel, 0);
     dragVel += dragVel > 0 ? -2 : 2;
   }
 
@@ -22,7 +24,9 @@ content.addEventListener("pointermove", (ev) => {
   if (dragging) {
     const dx = mouseX - ev.x;
     dragVel = dx;
-    window.scrollTo(document.documentElement.scrollLeft + dx, 0);
+    setOffset(offset + dx);
+    render()
+    // window.scrollTo(document.documentElement.scrollLeft + dx, 0);
   }
 
   mouseX = ev.x;

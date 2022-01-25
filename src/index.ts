@@ -1,4 +1,4 @@
-import { render } from "./rendering.ts";
+import { render, setOffset, offset } from "./rendering.ts";
 import { addButton } from "./elements.ts";
 import { startEventCreation } from "./eventEditorController.ts";
 import "./grabbing.ts";
@@ -12,11 +12,11 @@ const date = DateTime.fromObject({
 });
 console.log(date.toSeconds());
 
-const offset = +(localStorage.getItem("offset") ?? NaN);
-console.log(offset);
-if (!isNaN(offset)) {
+const localStorageOffset = +(localStorage.getItem("offset") ?? NaN);
+console.log(localStorageOffset);
+if (!isNaN(localStorageOffset)) {
   setTimeout(() => {
-    window.scrollTo(offset, 0);
+    setOffset(localStorageOffset);
   }, 10);
 }
 
@@ -33,3 +33,8 @@ console.log(
 );
 
 console.log();
+
+addEventListener('resize', () => {
+  setOffset(offset);
+  render();
+});

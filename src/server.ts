@@ -3,7 +3,7 @@ import { TimelineEvent } from "./types.ts";
 
 declare global {
   interface Window {
-    timelineEvents: Record<string, TimelineEvent | undefined>;
+    timelineEvents: Record<number, TimelineEvent | undefined>;
   }
 }
 
