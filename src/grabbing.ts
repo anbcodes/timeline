@@ -8,7 +8,6 @@ const dragFrame = () => {
   if (dragVel !== 0 && !dragging) {
     setOffset(offset + dragVel);
     render();
-    // window.scrollTo(document.documentElement.scrollLeft + dragVel, 0);
     dragVel += dragVel > 0 ? -2 : 2;
   }
 
@@ -26,7 +25,6 @@ content.addEventListener("pointermove", (ev) => {
     dragVel = dx;
     setOffset(offset + dx);
     render()
-    // window.scrollTo(document.documentElement.scrollLeft + dx, 0);
   }
 
   mouseX = ev.x;

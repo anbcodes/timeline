@@ -7,61 +7,36 @@ declare global {
   }
 }
 
-const eventSource = new EventSource("/api/sse");
+const websocket = new WebSocket(`${window.location.protocol === "https:" ? 'wss' : 'ws'}://${window.location.host}/ws`);
 
-eventSource.addEventListener("event-create", async (event) => {
-  const ev = event as MessageEvent;
-  const id = +ev.data;
-  if (isNaN(id)) {
-    console.log("received an invaild id!");
-    return;
-  }
-  const res = await fetch(`/api/event/${id}`);
-  const timelineEvent = await res.json();
-  if (
-    timelineEvent.name !== undefined && timelineEvent.start !== undefined &&
-    timelineEvent.end !== undefined && timelineEvent.tags !== undefined &&
-    timelineEvent.visible !== undefined
-  ) {
-    window.timelineEvents[id] = timelineEvent;
-    console.log("Add event", id);
+websocket.addEventListener('message', async (ev) => {
+  const event = JSON.parse(ev.data);
+
+  if (event.name === 'post' || event.name === 'put') {
+    const id = event.id;
+    const res = await fetch(`/event/${id}`);
+    const timelineEvent = await res.json();
+
+    if (
+      typeof timelineEvent.name === 'string' && typeof timelineEvent.start === 'number'
+      && typeof timelineEvent.end === 'number' && typeof timelineEvent.tags === 'string'
+    ) {
+      window.timelineEvents[id] = timelineEvent;
+      console.log("Add/update event", id);
+      render();
+    } else {
+      console.error("Recieved an invaild timeline event", timelineEvent);
+    }
+  } else if (event.name === 'delete') {
+    const id = event.id;
+    delete window.timelineEvents[id];
+    console.log('deleted event');
     render();
-  } else {
-    console.error("Recieved an invaild timeline event", timelineEvent);
   }
-});
-
-eventSource.addEventListener("event-update", async (event) => {
-  const ev = event as MessageEvent;
-  const id = +ev.data;
-  if (isNaN(id)) {
-    console.log("received an invaild id!");
-    return;
-  }
-  const res = await fetch(`/api/event/${id}`);
-  const timelineEvent = await res.json();
-  if (
-    timelineEvent.name !== undefined && timelineEvent.start !== undefined &&
-    timelineEvent.end !== undefined && timelineEvent.tags !== undefined &&
-    timelineEvent.visible !== undefined
-  ) {
-    window.timelineEvents[id] = timelineEvent;
-    console.log("Update event", ev.data);
-    render();
-  } else {
-    console.error("Recieved an invaild timeline event", timelineEvent);
-  }
-});
-
-eventSource.addEventListener("event-delete", (ev) => {
-  const id = +((ev as MessageEvent).data);
-  delete window.timelineEvents[id];
-  console.log("Delete event", id);
-  render();
-});
+})
 
 export const addEvent = async (ev: TimelineEvent) => {
-  const res = await fetch("/api/event", {
+  const res = await fetch("/event", {
     method: "POST",
     body: JSON.stringify(ev),
   });
@@ -69,8 +44,8 @@ export const addEvent = async (ev: TimelineEvent) => {
   return res.json();
 };
 
-export const updateEvent = async (id: number, ev: TimelineEvent) => {
-  const res = await fetch(`/api/event/${id}`, {
+export const updateEvent = async (id: string, ev: TimelineEvent) => {
+  const res = await fetch(`/event/${id}`, {
     method: "PUT",
     body: JSON.stringify(ev),
   });
@@ -78,16 +53,16 @@ export const updateEvent = async (id: number, ev: TimelineEvent) => {
   return res.json();
 };
 
-export const getEvent = async (id: number) => {
-  const res = await fetch(`/api/event/${id}`, {
+export const getEvent = async (id: string) => {
+  const res = await fetch(`/event/${id}`, {
     method: "GET",
   });
 
   return res.json();
 };
 
-export const removeEvent = async (id: number) => {
-  const res = await fetch(`/api/event/${id}`, {
+export const removeEvent = async (id: string) => {
+  const res = await fetch(`/event/${id}`, {
     method: "DELETE",
   });
 

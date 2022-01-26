@@ -17,7 +17,6 @@ addEventListener("wheel", (ev) => {
     const newPos = newOffset - mouseX;
     setScale(scale * ZOOM_SPEED);
     setOffset(newPos);
-    // window.scrollTo(newPos, 0);
   } else {
     const totalTimelinePx = window.document.documentElement.clientWidth;
     const offsetPercent = (mouseX + scrollLeft) / totalTimelinePx;
@@ -26,7 +25,6 @@ addEventListener("wheel", (ev) => {
     const newPos = newOffset - mouseX;
     setScale(scale / ZOOM_SPEED);
     setOffset(newPos);
-    // window.scrollTo(newPos, 0);
   }
   render();
 });

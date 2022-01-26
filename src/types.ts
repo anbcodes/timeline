@@ -2,5 +2,5 @@ export interface TimelineEvent {
   name: string;
   start: number;
   end: number;
-  tags: string[];
+  tags: string;
 }

@@ -5,7 +5,7 @@ import { addEvent, removeEvent, updateEvent } from "./server.ts";
 import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
 
 let displayDialog = false;
-let currentlyEditing: (TimelineEvent & { id?: number }) | undefined;
+let currentlyEditing: (TimelineEvent & { id?: string }) | undefined;
 
 export const startEventCreation = () => {
   displayDialog = true;
@@ -14,12 +14,12 @@ export const startEventCreation = () => {
     name: "",
     start: +(localStorage.getItem('startSeconds') || 0),
     end: +(localStorage.getItem('endSeconds') || 0),
-    tags: [],
+    tags: '',
   };
   updateDisplay();
 };
 
-export const startEventUpdate = (id: number, event: TimelineEvent) => {
+export const startEventUpdate = (id: string, event: TimelineEvent) => {
   displayDialog = true;
   eventEditor.error.textContent = "";
   currentlyEditing = {
@@ -51,12 +51,11 @@ const updateDisplay = () => {
 
   if (currentlyEditing) {
     eventEditor.name.value = currentlyEditing.name;
-    // TODO: Implement the ui
     eventEditor.start.value = formatDate(currentlyEditing.start);
     eventEditor.end.value = formatDate(currentlyEditing.end);
     eventEditor.startBCAD.textContent = DateTime.fromSeconds(currentlyEditing.start).get('year') > 0 ? 'AD' : 'BC'
     eventEditor.endBCAD.textContent = DateTime.fromSeconds(currentlyEditing.end).get('year') > 0 ? 'AD' : 'BC'
-    eventEditor.tags.value = currentlyEditing.tags.join(", ");
+    eventEditor.tags.value = currentlyEditing.tags;
 
     if (currentlyEditing.id === undefined) {
       eventEditor.delete.style.visibility = "hidden";
@@ -94,7 +93,7 @@ const updateCurrentlyEditing = (): string => {
     return "Invaild dates: the end date cannot be less then the start date"
   }
 
-  const tags = eventEditor.tags.value.split(",").map((v) => v.trim());
+  const tags = eventEditor.tags.value
 
   currentlyEditing = {
     id: currentlyEditing?.id,

@@ -25,7 +25,6 @@ const secondsToPixels = (seconds: number): number => {
 }
 
 const pixelsToSeconds = (pixels: number) => {
-  // const totalPixels = innerWidth * scale;
   const totalPixels = secondsToPixels(totalSeconds());
   const pixelsPercent = pixels / totalPixels;
   const seconds = pixelsPercent * totalSeconds();
@@ -35,11 +34,6 @@ const pixelsToSeconds = (pixels: number) => {
 const secondsToOffsetInPixels = (seconds: number) => {
   return secondsToPixels(seconds - YEAR_RANGE[0]) - offset;
 }
-
-// f(sec - start) - offset = pixels
-// pixels + offset = f(sec - start)
-// af(pixels + offset) = sec - start
-// sec = af(pixels + offset) + start
 
 const pixelToSecondsOffset = (pixels: number) => {
   return pixelsToSeconds(pixels + offset) + YEAR_RANGE[0];
@@ -87,10 +81,6 @@ export const getYearIncrements = () => {
     [1 / 365 / 24 / 60 / 60, Duration.fromObject({seconds: 1})],
   ];
 
-  // let values = increments.filter(v => v[0] >= yearInc).map(v => v[1]);
-
-  // return values;
-
   let closestInd = 0;
   increments.forEach((inc, i) => {
     if (Math.abs(yearInc - inc[0]) < Math.abs(yearInc - increments[closestInd][0])) {
@@ -99,24 +89,12 @@ export const getYearIncrements = () => {
   });
 
   return increments.slice(0, closestInd + 1).map(v => v[1]);
-  // let closest: Duration = Duration.fromObject({years: closestNum});
-  // if (closestNum === 1 / 4) {
-  //   closest = Duration.fromObject({months: 3});
-  // } else if (closestNum === 1 / 12) {
-  //   closest = Duration.fromObject({months: 1});
-  // } else if (closestNum === 1 / 12 / 4) {
-  //   closest = Duration.fromObject({weeks: 1});
-  // } else if (closestNum === 1 / 365) {
-  //   closest = Duration.fromObject({days: 1});
-  // } 
-  // return closest;
 };
 
 const offsetPadding = 60 * 60 * 24 * 365 * 1000;
 
 export const setScale = (n: number) => {
   if (n >= 1) {
-    // console.log('scale', scale);
     scale = n;
   }
 };
@@ -124,20 +102,7 @@ export const setScale = (n: number) => {
 export const setOffset = (n: number) => {
   const minOffset = secondsToOffsetInPixels(YEAR_RANGE[0] - offsetPadding) + offset;
   const maxOffset = secondsToOffsetInPixels(YEAR_RANGE[1] + offsetPadding) - innerWidth + offset;
-  // console.log(minOffset, maxOffset);
   offset = Math.max(Math.min(n, maxOffset), minOffset);
-  // console.log(minOffset, maxOffset, offset);
-  // const secondsRight = pixelOffsetToSeconds(n + innerWidth);
-  // const secondsLeft = pixelOffsetToSeconds(n);
-  // if (secondsLeft <= YEAR_RANGE[0] - offsetPadding) {
-  //   offset = secondsToOffsetInPixels(YEAR_RANGE[0] - offsetPadding);
-  // } else if (secondsRight >= YEAR_RANGE[1] + offsetPadding) {
-  //   offset = secondsToOffsetInPixels(YEAR_RANGE[1] + offsetPadding);
-  // } else {
-  //   console.log(secondsRight, secondsLeft, YEAR_RANGE[1] + 60 * 60 * 24 * 365 * 1000, YEAR_RANGE[0] - 60 * 60 * 24 * 365 * 1000);
-  //   offset = n;
-  //   render();
-  // }
 };
 
 
@@ -173,16 +138,16 @@ const updateEvents = () => {
   Object.entries(window.timelineEvents).forEach(([id, event]) => {
     if (event) {
       if (event.start === event.end) {
-        addEvent(+id, event, 'both')
+        addEvent(id, event, 'both')
       } else {
-        addEvent(+id, event, 'start');
-        addEvent(+id, event, 'end');
+        addEvent(id, event, 'start');
+        addEvent(id, event, 'end');
       }
     }
   });
 }
 
-const addEvent = (id: number, event: TimelineEvent, part: "start" | "end" | "both") => {
+const addEvent = (id: string, event: TimelineEvent, part: "start" | "end" | "both") => {
   const seconds = part === 'start' ? event.start : event.end;
   const prefix = part === 'start' ? 'Begin: ' : (part === 'end' ? 'End: ' : '');
   const concurrentEvents = (Object.values(window.timelineEvents) as TimelineEvent[]).filter(({start, end}) => start > seconds && end < seconds);

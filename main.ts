@@ -1,255 +1,230 @@
 import {
-  Application,
-  HttpError,
-  Router,
-  ServerSentEvent,
-  ServerSentEventTarget,
-  Status,
+    Application,
+    HttpError,
+    Router,
+    ServerSentEvent,
+    Status,
+    Context,
 } from "https://deno.land/x/oak@v10.1.0/mod.ts";
 
-const app = new Application();
-const router = new Router();
-
-const password = Deno.env.get("TIMELINE_PASSWORD");
-const username = Deno.env.get("TIMELINE_USERNAME");
-
-if (!password || !username) {
-  throw new Error(
-    `Username and password required (Specify with TIMELINE_PASSWORD and TIMELINE_USERNAME). Got ${password} for password and ${username} for username`,
-  );
+export interface TimelineEvent {
+    name: string;
+    start: number;
+    end: number;
+    tags: string;
 }
 
-// Error handler middleware
-app.use(async (context, next) => {
-  try {
-    await next();
-  } catch (e) {
-    if (e instanceof HttpError) {
-      // deno-lint-ignore no-explicit-any
-      context.response.status = e.status as any;
-      if (e.expose) {
-        context.response.body = `<!DOCTYPE html>
-              <html>
-                <body>
-                  <h1>${e.status} - ${e.message}</h1>
-                </body>
-              </html>`;
-      } else {
-        context.response.body = `<!DOCTYPE html>
-              <html>
-                <body>
-                  <h1>${e.status} - ${Status[e.status]}</h1>
-                </body>
-              </html>`;
-      }
-    } else if (e instanceof Error) {
-      context.response.status = 500;
-      context.response.body = `<!DOCTYPE html>
-              <html>
-                <body>
-                  <h1>500 - Internal Server Error</h1>
-                </body>
-              </html>`;
-      console.log("Unhandled Error:", e.message);
-      console.log(e.stack);
-    }
-  }
-});
+const ID_LENGTH = 12;
 
-// Logger
-app.use(async (context, next) => {
-  await next();
-  const rt = context.response.headers.get("X-Response-Time");
-  console.log(
-    `${context.request.method} ${context.request.url.pathname} - ${String(rt)}`,
-  );
-});
+const dataFile = Deno.args[0];
 
-// Response Time
-app.use(async (context, next) => {
-  const start = Date.now();
-  await next();
-  const ms = Date.now() - start;
-  context.response.headers.set("X-Response-Time", `${ms}ms`);
-});
-
-app.use(async (context, next) => {
-  if (
-    context.request.headers.get("Authorization") ===
-      "Basic " + btoa(`${username}:${password}`)
-  ) {
-    await next();
-  } else {
-    context.response.body = "401 - Unauthorized";
-    context.response.status = 401;
-    context.response.headers.append("WWW-Authenticate", "Basic");
-  }
-});
-
-interface TimelineEvent {
-  name: string;
-  start: number;
-  end: number;
-  tags: string[];
-  visible: number;
-}
-
-let events: Record<number, TimelineEvent | undefined> = {};
+let users: { [username: string]: {
+    password: string,
+    events: { [id: string]: TimelineEvent },
+} } = {};
 
 try {
-  events = JSON.parse(
-    Deno.readTextFileSync(Deno.args[0]),
-  );
+    users = JSON.parse(Deno.readTextFileSync(dataFile));
 } catch (e) {
-  if (e instanceof Deno.errors.NotFound) {
-    console.log("File does not exist. Using empty events dictionary");
-  } else {
-    console.log("Error parsing events using default object: ", e);
-  }
+    console.error('invaild or not found users: using empty object', e);
 }
-const randomUniqueId = () => Math.floor(Math.random() * (2 ** 61));
 
-router.get("/api/events.js", (ctx) => {
-  ctx.response.body = "window.timelineEvents = " + JSON.stringify(events);
-  ctx.response.headers.append("Content-Type", "application/javascript");
-  ctx.response.status = 200;
-});
+const websockets: {
+    [username: string]: WebSocket[]
+} = {};
 
-let clients = [] as ServerSentEventTarget[];
+const router = new Router();
+const app = new Application();
 
-router.get("/api/sse", (ctx) => {
-  const target = ctx.sendEvents();
-  target.addEventListener("close", (evt) => {
-    clients.filter((v) => v !== target);
+const html = Deno.readTextFileSync('./static/index.html')
+const js = Deno.readTextFileSync('./static/index.js')
+const css = Deno.readTextFileSync('./static/style.css')
+
+const authenticate = (ctx: Context) => {
+    const authorization = ctx.request.headers.get('Authorization')
+    console.log(authorization);
+    if (authorization && authorization.startsWith('Basic ')) {
+        try {
+            const [username, password] = atob(authorization.slice(6)).split(':');
+            console.log(username, password);
+            if (username && password) {
+                if (users[username]) {
+                    if (users[username]?.password === password) {
+                        return {username, password}
+                    }
+                }
+            }
+        } catch (e) {
+            const error = new HttpError('Authorization required');
+            error.status = Status.Unauthorized;
+            ctx.response.headers.append("WWW-Authenticate", "Basic");
+            
+            throw error;
+        }
+        
+    }
+    
+    const error = new HttpError('Authorization required');
+    error.status = Status.Unauthorized;
+    ctx.response.headers.append("WWW-Authenticate", "Basic");
+    throw error;
+}
+
+const parseBodyAsEvent = async (ctx: Context): Promise<TimelineEvent> => {
+    try {
+        const bodyJson = await ctx.request.body({
+            type: 'json'
+        }).value;
+        const {name, start, end, tags} = bodyJson;
+        if (typeof name === 'string' && typeof start === 'number' && typeof end === 'number' && typeof tags === 'string') {
+            return {
+                name,
+                start,
+                end,
+                tags,
+            }
+        } else {
+            throw new Error()
+        }
+    } catch (_) {
+        const error = new HttpError('Invaild request body');
+        error.status = Status.BadRequest;
+        throw error;
+    }
+}
+
+const getRandomString = (s: number) => {
+    const buf = new Uint8Array(s);
+    crypto.getRandomValues(buf);
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    let ret = "";
+    for (let i = 0; i < buf.length; ++i) {
+        const ind = Math.floor((buf[i] / 256) * alphabet.length)
+        ret += alphabet[ind]
+    }
+    return ret;
+}
+
+const sendEvent = (username: string, name: string, id: string) => {
+    websockets[username]?.forEach(v => {
+        v.send(JSON.stringify({
+            name,
+            id
+        }))
+    })
+
+    Deno.writeTextFileSync(dataFile, JSON.stringify(users));
+}
+
+router.get('/', (ctx) => {
+    authenticate(ctx);
+    // ctx.response.body = html;
+    ctx.response.body = Deno.readTextFileSync('./static/index.html');
+    ctx.response.headers.set('Content-Type', 'text/html');
+})
+
+router.get('/index.js', (ctx) => {
+    const {username} = authenticate(ctx);
+    // ctx.response.body = `window.timelineEvents = ${JSON.stringify(users[username].events)};\n` + js;
+    ctx.response.body = `window.timelineEvents = ${JSON.stringify(users[username].events)};\n` + Deno.readTextFileSync('./static/index.js');
+    ctx.response.headers.set('Content-Type', 'application/javascript');
+})
+
+router.get('/style.css', (ctx) => {
+    authenticate(ctx);
+    // ctx.response.body = css;
+    ctx.response.body = Deno.readTextFileSync('./static/style.css');
+    ctx.response.headers.set('Content-Type', 'text/css');
+})
+
+router.post('/event', async (ctx) => {
+    const {username} = authenticate(ctx);
+    const event = await parseBodyAsEvent(ctx);
+    const id = getRandomString(ID_LENGTH);
+    users[username].events[id] = event;
+    sendEvent(username, 'post', id);
+    ctx.response.body = {
+        success: true
+    }
+})
+
+router.get('/event/:id', (ctx) => {
+    const {username} = authenticate(ctx);
+    if (ctx.params.id === "NaN") console.error('NaN detected (event get)');
+    const event = users[username].events[ctx.params.id];
+    ctx.response.body = event;
+})
+
+router.put('/event/:id', async (ctx) => {
+    const {username} = authenticate(ctx);
+    if (ctx.params.id === "NaN") console.error('NaN detected (event put)');
+    const newEvent = await parseBodyAsEvent(ctx);
+    users[username].events[ctx.params.id] = newEvent;
+    sendEvent(username, 'put', ctx.params.id);
+    ctx.response.body = {
+        success: true
+    }
+})
+
+router.delete('/event/:id', (ctx) => {
+    const {username} = authenticate(ctx);
+    if (ctx.params.id === "NaN") console.error('NaN detected (event delete)');
+    delete users[username].events[ctx.params.id];
+    sendEvent(username, 'delete', ctx.params.id);
+    ctx.response.body = {
+        success: true
+    }
+})
+
+router.get('/ws', (ctx) => {
+    const {username} = authenticate(ctx);
+    if (!websockets[username]) {
+        websockets[username] = [];
+    }
+    const socket = ctx.upgrade();
+    websockets[username].push(socket);
+    socket.addEventListener('close', () => {
+        websockets[username] = websockets[username].filter(v => v !== socket);
+    })
+})
+
+app.use(async (context, next) => {
+    try {
+      await next();
+    } catch (e) {
+      if (e instanceof HttpError) {
+        // deno-lint-ignore no-explicit-any
+        context.response.status = e.status as any;
+        if (e.expose) {
+          context.response.body = `<!DOCTYPE html>
+                <html>
+                  <body>
+                    <h1>${e.status} - ${e.message}</h1>
+                  </body>
+                </html>`;
+        } else {
+          context.response.body = `<!DOCTYPE html>
+                <html>
+                  <body>
+                    <h1>${e.status} - ${Status[e.status]}</h1>
+                  </body>
+                </html>`;
+        }
+      } else if (e instanceof Error) {
+        context.response.status = 500;
+        context.response.body = `<!DOCTYPE html>
+                <html>
+                  <body>
+                    <h1>500 - Internal Server Error</h1>
+                  </body>
+                </html>`;
+        console.log("Unhandled Error:", e.message);
+        console.log(e.stack);
+      }
+    }
   });
-  clients.push(target);
-});
 
-const send = (eventName: string, data: any) => {
-  Deno.writeTextFile(Deno.args[0], JSON.stringify(events));
 
-  clients = clients.filter((v) => !v.closed);
-  clients.forEach((client) => {
-    client.dispatchEvent(new ServerSentEvent(eventName, data));
-  });
-};
-
-router.post("/api/event", async (ctx) => {
-  const body = await ctx.request.body({ type: "json" }).value;
-  const id = randomUniqueId();
-  const event = {
-    name: body.name ?? "New Event",
-    start: body.start ?? 0,
-    end: body.end ?? 0,
-    tags: body.tags ?? [],
-    visible: body.visible ?? 2000,
-  };
-
-  events[id] = event;
-  send("event-create", id);
-
-  ctx.response.body = { ...event, id };
-  ctx.response.headers.append("Content-Type", "application/json");
-});
-
-router.get("/api/event/:id", (ctx) => {
-  const event = events[+ctx.params.id];
-  if (event === undefined) {
-    ctx.response.body = {
-      status: 404,
-      message: "Event not found",
-    };
-    ctx.response.status = 404;
-    return;
-  }
-  ctx.response.body = {
-    ...event,
-    id: +ctx.params.id,
-  };
-});
-
-router.put("/api/event/:id", async (ctx) => {
-  const body = await ctx.request.body({ type: "json" }).value;
-  const id = +ctx.params.id;
-  if (isNaN(id)) {
-    ctx.response.body = {
-      status: 400,
-      message: "Bad Request: id is required",
-    };
-    ctx.response.status = 400;
-    return;
-  }
-  const oldEvent = events[id];
-  if (!oldEvent) {
-    ctx.response.body = {
-      status: 400,
-      message: "Bad Request: event doesn't exist",
-    };
-    ctx.response.status = 400;
-    return;
-  }
-  const event = {
-    name: body.name ?? oldEvent.name,
-    start: body.start ?? oldEvent.start,
-    end: body.end ?? oldEvent.end,
-    tags: body.tags ?? oldEvent.tags,
-    visible: body.visible ?? oldEvent.visible,
-  };
-
-  events[id] = event;
-  send("event-update", id);
-
-  ctx.response.body = { ...event, id };
-  ctx.response.headers.append("Content-Type", "application/json");
-});
-
-router.delete("/api/event/:id", (ctx) => {
-  const id = +ctx.params.id;
-  if (isNaN(id)) {
-    ctx.response.body = {
-      status: 400,
-      message: "Bad Request: id is required",
-    };
-    ctx.response.status = 400;
-    return;
-  }
-  if (!events[id]) {
-    ctx.response.body = {
-      status: 400,
-      message: "Bad Request: event doesn't exist",
-    };
-    ctx.response.status = 400;
-    return;
-  }
-
-  delete events[id];
-
-  send("event-delete", id);
-
-  ctx.response.body = { deleted: true };
-});
-
-router.get("/api/log/:text", (ctx) => {
-  console.log("Server log message:", ctx.params.text);
-  ctx.response.body = "Success";
-});
-
-app.use(router.routes());
-app.use(router.allowedMethods());
-
-// Send static content
-app.use(async (context) => {
-  await context.send({
-    root: `${Deno.cwd()}/static`,
-    index: "index.html",
-  });
-});
-
-app.addEventListener("listen", ({ hostname, port, serverType }) => {
-  console.log(
-    "Start listening on " + `${hostname}:${port}`,
-  );
-  console.log("  using HTTP server: " + serverType);
-});
-
-await app.listen({ hostname: "0.0.0.0", port: 8080 });
+app.use(router.routes())
+app.use(router.allowedMethods())
+app.listen({ hostname: "0.0.0.0", port: 8080 })
