@@ -1,8 +1,17 @@
 .year {
     position: absolute;
-    top: 75vh;
     overflow: visible;
-    width: 7rem;
+    width: 8rem;
     text-align: center;
     cursor: text;
+    padding: 0px;
+    margin: 0px;
+    font-size: .875rem;
+    font-weight: 500;
+}
+
+.yearline {
+    position: absolute;
+    border-left: var(--border-color) 1px solid;
+    top: var(--main-line-top);
 }

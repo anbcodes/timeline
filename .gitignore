@@ -1,4 +1,4 @@
 /static/index.js
 /data
-data.json
-data-old.json
+*.json
+!deno.jsonc

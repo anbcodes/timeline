@@ -3,7 +3,7 @@ import { stopPropagation } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
 import { addEvent, removeEvent, updateEvent } from "./server.ts";
 import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
-import { closeEventView } from './eventViewController.ts';
+import { closeEventView } from "./eventViewController.ts";
 
 export let displayDialog = false;
 let currentlyEditing: (TimelineEvent & { id?: string }) | undefined;
@@ -13,9 +13,9 @@ export const startEventCreation = () => {
   eventEditor.error.textContent = "";
   currentlyEditing = {
     name: "",
-    start: +(localStorage.getItem('startSeconds') || 0),
-    end: +(localStorage.getItem('endSeconds') || 0),
-    tags: '',
+    start: +(localStorage.getItem("startSeconds") || 0),
+    end: +(localStorage.getItem("endSeconds") || 0),
+    tags: "",
   };
   updateDisplay();
 };
@@ -32,14 +32,14 @@ export const startEventUpdate = (id: string, event: TimelineEvent) => {
 
 const formatDate = (seconds: number) => {
   let datetime = DateTime.fromSeconds(seconds);
-  if (datetime.get('year') <= 0) {
+  if (datetime.get("year") <= 0) {
     datetime = datetime.set({
-      year: -datetime.get('year') + 1
-    })
+      year: -datetime.get("year") + 1,
+    });
   }
 
-  return datetime.toISO({includeOffset: false});
-}
+  return datetime.toISO({ includeOffset: false });
+};
 
 const updateDisplay = () => {
   if (displayDialog) {
@@ -54,14 +54,22 @@ const updateDisplay = () => {
     eventEditor.name.value = currentlyEditing.name;
     eventEditor.start.value = formatDate(currentlyEditing.start);
     eventEditor.end.value = formatDate(currentlyEditing.end);
-    eventEditor.startBCAD.textContent = DateTime.fromSeconds(currentlyEditing.start).get('year') > 0 ? 'AD' : 'BC'
-    eventEditor.endBCAD.textContent = DateTime.fromSeconds(currentlyEditing.end).get('year') > 0 ? 'AD' : 'BC'
+    eventEditor.startBCAD.textContent =
+      DateTime.fromSeconds(currentlyEditing.start).get("year") > 0
+        ? "AD"
+        : "BC";
+    eventEditor.endBCAD.textContent =
+      DateTime.fromSeconds(currentlyEditing.end).get("year") > 0 ? "AD" : "BC";
     eventEditor.tags.value = currentlyEditing.tags;
 
     if (currentlyEditing.id === undefined) {
       eventEditor.delete.style.visibility = "hidden";
+      eventEditor.submit.textContent = "Add Event";
+      eventEditor.title.textContent = "Add Event";
     } else {
       eventEditor.delete.style.visibility = "visible";
+      eventEditor.submit.textContent = "Update Event";
+      eventEditor.title.textContent = "Update Event";
     }
   }
 };
@@ -69,10 +77,10 @@ const updateDisplay = () => {
 const parseYear = (year: string, part: string): number => {
   let datetime = DateTime.fromISO(year);
 
-  if (part === 'BC') {
+  if (part === "BC") {
     datetime = datetime.set({
-      year: -datetime.get('year') + 1
-    })
+      year: -datetime.get("year") + 1,
+    });
   }
 
   return datetime.toSeconds();
@@ -80,21 +88,27 @@ const parseYear = (year: string, part: string): number => {
 
 const updateCurrentlyEditing = (): string => {
   const name = eventEditor.name.value;
-  const start = parseYear(eventEditor.start.value, eventEditor.startBCAD.textContent || 'AD');
+  const start = parseYear(
+    eventEditor.start.value,
+    eventEditor.startBCAD.textContent || "AD",
+  );
   if (isNaN(start)) {
     return "Invaild start year: " + eventEditor.start.value;
   }
 
-  const end = parseYear(eventEditor.end.value,  eventEditor.endBCAD.textContent || 'AD');
+  const end = parseYear(
+    eventEditor.end.value,
+    eventEditor.endBCAD.textContent || "AD",
+  );
   if (isNaN(end)) {
     return "Invaild end year: " + eventEditor.end.value;
   }
 
   if (end < start) {
-    return "Invaild dates: the end date cannot be less then the start date"
+    return "Invaild dates: the end date cannot be less then the start date";
   }
 
-  const tags = eventEditor.tags.value
+  const tags = eventEditor.tags.value;
 
   currentlyEditing = {
     id: currentlyEditing?.id,
@@ -103,8 +117,8 @@ const updateCurrentlyEditing = (): string => {
     end,
     tags,
   };
-  localStorage.setItem('startSeconds', currentlyEditing.start.toString(10));
-  localStorage.setItem('endSeconds', currentlyEditing.end.toString(10));
+  localStorage.setItem("startSeconds", currentlyEditing.start.toString(10));
+  localStorage.setItem("endSeconds", currentlyEditing.end.toString(10));
   return "";
 };
 
@@ -161,17 +175,17 @@ eventEditor.delete.addEventListener("click", () => {
 });
 
 eventEditor.startBCAD.addEventListener("click", () => {
-  if (eventEditor.startBCAD.textContent === 'BC') {
-    eventEditor.startBCAD.textContent = 'AD';
+  if (eventEditor.startBCAD.textContent === "BC") {
+    eventEditor.startBCAD.textContent = "AD";
   } else {
-    eventEditor.startBCAD.textContent = 'BC';
+    eventEditor.startBCAD.textContent = "BC";
   }
-})
+});
 
 eventEditor.endBCAD.addEventListener("click", () => {
-  if (eventEditor.endBCAD.textContent === 'BC') {
-    eventEditor.endBCAD.textContent = 'AD';
+  if (eventEditor.endBCAD.textContent === "BC") {
+    eventEditor.endBCAD.textContent = "AD";
   } else {
-    eventEditor.endBCAD.textContent = 'BC';
+    eventEditor.endBCAD.textContent = "BC";
   }
-})
+});

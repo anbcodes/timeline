@@ -1,10 +1,6 @@
 .event-view {
     height: 500px;
     width: 600px;
-    border: var(--border-color) 1px solid;
-    border-radius: 0.5rem;
-    background-color: var(--background-color);
-    padding: 10px;
     display: flex;
     flex-direction: column;
     transition: all 0.25s;
@@ -14,23 +10,12 @@
     z-index: 6;
 }
 
-.event-view > .actions > button:hover {
-    background-color: var(--primary-color-mod-1);
-}
-
-.event-view > .actions > button:active {
-    background-color: var(--primary-color-mod-2);
+.event-view > .name {
+    padding-bottom: 10px;
 }
 
 .event-view > .actions > button {
-    max-width: 100px;
     margin-right: 10px;
-    border-radius: 0.20rem;
-    border: 1px var(--border-color) solid;
-    padding: 4px;
-    background-color: var(--primary-color);
-    cursor: pointer;
-    transition: all 0.2s;
 }
 
 .event-view > .actions {

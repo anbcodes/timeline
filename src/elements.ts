@@ -21,6 +21,7 @@ export const eventEditor = {
   submit: ensure<HTMLButtonElement>("#event-edit-submit"),
   cancel: ensure<HTMLButtonElement>("#event-edit-cancel"),
   delete: ensure<HTMLButtonElement>("#event-edit-delete"),
+  title: ensure<HTMLDivElement>("#event-edit-title"),
 };
 
 export const eventViewer = {
@@ -32,4 +33,4 @@ export const eventViewer = {
   concurrentEvents: ensure<HTMLUListElement>("#event-view-concurrent-events"),
   edit: ensure<HTMLDivElement>("#event-view-edit"),
   close: ensure<HTMLDivElement>("#event-view-close"),
-}
+};

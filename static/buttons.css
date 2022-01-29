@@ -1,0 +1,35 @@
+.primary-button, .secondary-button {
+    border-radius: 0.20rem;
+    padding: 5px 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.primary-button {
+    background-color: var(--primary-color);
+    color: var(--primary-color-text);
+    border: none;
+    padding: 5.5px 15.5px;
+}
+
+.primary-button:hover {
+    background-color: var(--primary-color-mod-1);
+}
+
+.primary-button:active {
+    background-color: var(--primary-color-mod-2);
+}
+
+.secondary-button {
+    background-color: var(--secondary-color);
+    color: var(--secondary-color-text);
+    border: 1px var(--input-border-color) solid;
+}
+
+.secondary-button:hover {
+    background-color: var(--secondary-color-mod-1);
+}
+
+.secondary-button:active {
+    background-color: var(--secondary-color-mod-2);
+}

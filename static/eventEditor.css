@@ -7,11 +7,10 @@
     font-size: x-large;
     text-align: center;
     border-radius: 100%;
-    border-color: var(--border-color);
+    padding: 0px;
     border-width: 1px;
     border-style: solid;
-    background-color: var(--primary-color);
-    transition: all 0.25s;
+    /* transition: all 0.25s; */
     cursor: pointer;
 }
 
@@ -26,10 +25,6 @@
 .event-edit {
     height: 500px;
     width: 600px;
-    border: var(--border-color) 1px solid;
-    border-radius: 0.5rem;
-    background-color: var(--background-color);
-    padding: 10px;
     display: flex;
     flex-direction: column;
     transition: all 0.25s;
@@ -41,32 +36,31 @@
 
 .event-edit > label {
     padding-top: 10px;
+    font-size: .875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    margin-bottom: .25rem;
+
 }
 
-.event-edit > input, .event-edit > select {
-    border-radius: 0.20rem;
-    border: 1px var(--border-color) solid;
-    padding: 4px;
+.event-edit > input, .event-edit > div > input, .event-edit > select {
+    border-radius: 0.25rem;
+    border: 1px var(--input-border-color) solid;
+    padding: 0.4rem;
+    /* box-sizing: border-box; */
+    appearance: none;
+    line-height: 1.2;
     background-color: var(--background-color-mod-1);
 }
 
-.event-edit > .actions > button:hover {
-    background-color: var(--primary-color-mod-1);
+.event-edit > input:focus {
+    border-color: var(--primary-color);
+    border-width: 2px;
+    padding: calc(0.4rem - 1px);
 }
 
-.event-edit > .actions > button:active {
-    background-color: var(--primary-color-mod-2);
-}
-
-.event-edit > .actions > button {
-    max-width: 100px;
+.event-edit > .actions > button, .event-edit > button {
     margin-right: 10px;
-    border-radius: 0.20rem;
-    border: 1px var(--border-color) solid;
-    padding: 4px;
-    background-color: var(--primary-color);
-    cursor: pointer;
-    transition: all 0.2s;
 }
 
 .event-edit > .error {
@@ -81,4 +75,10 @@
 
 .event-edit > input:focus {
     outline: none;
+}
+
+.BC-AD-btn {
+    margin-left: 10px;
+    font-family: inherit;
+    /* width: 3rem; */
 }

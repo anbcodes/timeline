@@ -5,20 +5,22 @@
 
 .eventline {
     position: absolute;
-    border: var(--border-color) 1px solid;
+    border-left: var(--input-border-color) 1px solid;
+    top: var(--main-line-top);
+    box-shadow: 0px 0px 4px var(--input-border-color);
 }
 
 .eventtext {
     position: absolute;
-    width: calc(var(--event-width) - 10px);
-    height: calc(var(--event-height) - 10px);
-    border-radius: 0.5rem;
-    border: var(--border-color) 1px solid;
-    background-color: var(--background-color-mod-1);
+    width: calc(var(--event-width));
+    height: calc(var(--event-height));
     cursor: pointer;
-    padding: 5px;
     font-size: small;
-    transition: all 1s;
+    /* transition: all 0.2s; */
     overflow: auto;
     z-index: 2;
+}
+
+.eventtext:hover {
+    z-index: 4;
 }

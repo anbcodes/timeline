@@ -6,8 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CC Timeline</title>
+    <link rel="stylesheet" href="./reset.css">
     <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./text.css">
     <link rel="stylesheet" href="./dates.css">
+    <link rel="stylesheet" href="./buttons.css">
     <link rel="stylesheet" href="./eventEditor.css">
     <link rel="stylesheet" href="./eventViewer.css">
     <link rel="stylesheet" href="./events.css">
@@ -19,36 +22,42 @@
 
     </div>
 
-    <button class="add-event" id="add">
-        +
+    <button class="add-event primary-button" id="add">
+        <svg style="width:24px;height:24px;display:block;margin:auto" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+        </svg>
     </button>
 
     <div class="center-container event-edit-container" id="event-edit-dialog">
-        <div class="event-edit" id="event-edit-form">
-            <div>
+        <div class="event-edit card" id="event-edit-form">
+            <div class="title" id="event-edit-title">
                 Add/Update Event
             </div>
             <label for="name">Name</label>
             <input name="name" type="text" id="event-edit-name">
             <label for="start">Start</label>
-            <input name="start" type="datetime-local" id="event-edit-start">
-            <button id="start-BC-AD-button" class="BC-AD-btn"></button>
+            <div class="flex">
+                <input name="start" type="datetime-local" id="event-edit-start">
+                <button id="start-BC-AD-button" class="BC-AD-btn secondary-button"></button>
+            </div>
             <label for="end">End</label>
-            <input name="end" type="datetime-local" id="event-edit-end">
-            <button id="end-BC-AD-button" class="BC-AD-btn"></button>
+            <div class="flex">
+                <input name="end" type="datetime-local" id="event-edit-end">
+                <button id="end-BC-AD-button" class="BC-AD-btn secondary-button"></button>
+            </div>
             <label for="tags">Tags</label>
             <input name="tags" type="text" id="event-edit-tags" placeholder="tag1, tag2, etc.">
             <div class="error" id="event-edit-error">
 
             </div>
             <div class="actions">
-                <button id="event-edit-submit">
+                <button id="event-edit-submit" class="primary-button">
                     Add/Update
                 </button>
-                <button id="event-edit-cancel">
+                <button id="event-edit-cancel" class="secondary-button">
                     Cancel
                 </button>
-                <button id="event-edit-delete">
+                <button id="event-edit-delete" class="secondary-button">
                     Delete
                 </button>
             </div>
@@ -57,8 +66,8 @@
     </div>
 
     <div class="center-container event-view-container" id="event-view-dialog">
-        <div class="event-view" id="event-view-card">
-            <div class="name" id="event-view-name"></div>
+        <div class="event-view card" id="event-view-card">
+            <div class="name title" id="event-view-name"></div>
             <div class="period" id="event-view-period"></div>
             <div class="tags" id="event-view-tags"></div>
             <div class="concurrent-events">
@@ -68,10 +77,10 @@
                 </ul>
             </div>
             <div class="actions">
-                <button id="event-view-edit">
+                <button class="primary-button" id="event-view-edit">
                     Edit
                 </button>
-                <button id="event-view-close">
+                <button class="secondary-button" id="event-view-close">
                     Close
                 </button>
             </div>
