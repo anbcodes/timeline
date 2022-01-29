@@ -1,7 +1,22 @@
 import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
+import { XmlEntities } from "https://deno.land/x/html_entities/mod.js";
 import { calcYearInc } from "./rendering.ts";
 
+export const partToPrefix = (part: 'start' | 'end' | 'both') => part === 'start' ? 'Begin: ' : (part === 'end' ? 'End: ' : '');
+
 export const stopPropagation = (e: Event) => e.stopPropagation();
+
+export const shtml = (strings: TemplateStringsArray, ...exprs: string[]) => {
+  let str = '';
+  exprs.forEach((exp, i) => {
+    str += strings[i];
+    str += XmlEntities.encode(exp);
+  });
+  if (strings[exprs.length]) {
+    str += strings[exprs.length];
+  }
+  return str;
+}
 
 export const yearSeconds = (year: number) => {
   return DateTime.fromObject({

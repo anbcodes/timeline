@@ -7,9 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CC Timeline</title>
     <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./dates.css">
+    <link rel="stylesheet" href="./eventEditor.css">
+    <link rel="stylesheet" href="./eventViewer.css">
+    <link rel="stylesheet" href="./events.css">
 </head>
 
 <body>
+    <script src="/events.js"></script>
     <div id="content">
 
     </div>
@@ -18,7 +23,7 @@
         +
     </button>
 
-    <div class="center-container" id="event-edit-dialog">
+    <div class="center-container event-edit-container" id="event-edit-dialog">
         <div class="event-edit" id="event-edit-form">
             <div>
                 Add/Update Event
@@ -48,6 +53,28 @@
                 </button>
             </div>
 
+        </div>
+    </div>
+
+    <div class="center-container event-view-container" id="event-view-dialog">
+        <div class="event-view" id="event-view-card">
+            <div class="name" id="event-view-name"></div>
+            <div class="period" id="event-view-period"></div>
+            <div class="tags" id="event-view-tags"></div>
+            <div class="concurrent-events">
+                Other events happening at this time
+                <ul class="list" id="event-view-concurrent-events">
+
+                </ul>
+            </div>
+            <div class="actions">
+                <button id="event-view-edit">
+                    Edit
+                </button>
+                <button id="event-view-close">
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 

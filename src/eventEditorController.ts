@@ -3,8 +3,9 @@ import { stopPropagation } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
 import { addEvent, removeEvent, updateEvent } from "./server.ts";
 import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
+import { closeEventView } from './eventViewController.ts';
 
-let displayDialog = false;
+export let displayDialog = false;
 let currentlyEditing: (TimelineEvent & { id?: string }) | undefined;
 
 export const startEventCreation = () => {
@@ -154,6 +155,7 @@ eventEditor.delete.addEventListener("click", () => {
     return;
   }
   removeEvent(id);
+  closeEventView();
   displayDialog = false;
   updateDisplay();
 });

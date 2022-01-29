@@ -1,14 +1,14 @@
 import { YEAR_RANGE } from "./consts.ts";
 import { content } from "./elements.ts";
-import { formatSeconds, stopPropagation } from "./util.ts";
+import { formatSeconds, stopPropagation, shtml } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
-import { startEventUpdate } from "./eventEditorController.ts";
+import { displayEvent } from './eventViewController.ts';
 import { makeNoise2D } from "https://deno.land/x/open_simplex_noise/mod.ts";
 import { DateTime, Duration } from "https://cdn.skypack.dev/luxon?dts";
 
 declare global {
   interface Window {
-    timelineEvents: Record<number, TimelineEvent | undefined>;
+    timelineEvents: Record<string, TimelineEvent | undefined>;
   }
 }
 
@@ -147,16 +147,20 @@ const updateEvents = () => {
   });
 }
 
-const addEvent = (id: string, event: TimelineEvent, part: "start" | "end" | "both") => {
+const hash = async (str: string) => {
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)))[0]
+}
+
+const addEvent = async (id: string, event: TimelineEvent, part: "start" | "end" | "both") => {
   const seconds = part === 'start' ? event.start : event.end;
   const prefix = part === 'start' ? 'Begin: ' : (part === 'end' ? 'End: ' : '');
   const concurrentEvents = (Object.values(window.timelineEvents) as TimelineEvent[]).filter(({start, end}) => start > seconds && end < seconds);
-  const lineHeight = (noise(seconds, 0) + 1) / 2 * 50
+  const lineHeight = ((await hash(event.name)) / 255) * 50
 
   const eventCardElement = createEventCardElement(prefix + event.name, seconds, concurrentEvents, lineHeight);
   eventCardElement.addEventListener("pointerdown", stopPropagation);
   eventCardElement.addEventListener("pointerup", stopPropagation);
-  eventCardElement.addEventListener("click", () => startEventUpdate(id, event));
+  eventCardElement.addEventListener("click", () => displayEvent(id, event, part));
 
   content.appendChild(eventCardElement);
 
@@ -170,15 +174,14 @@ const createEventCardElement = (name: string, seconds: number, concurrentEvents:
   const text = document.createElement("div");
   text.innerHTML = html;
   text.className = "eventtext";
-  text.style.left = `calc(${secondsToOffsetInPixels(seconds)}px - 2.5rem)`;
-  text.style.top = `calc(${70 - lineHeight}vh - 5rem)`;
-  
+  text.style.left = `calc(${secondsToOffsetInPixels(seconds)}px - (var(--event-width) / 2))`;
+  text.style.top = `calc(${70 - lineHeight}vh - var(--event-height))`;
 
   return text;
 }
 
 const compileEventCardHTML = (name: string, seconds: number, concurrentEvents: TimelineEvent[]) => 
-`<div>${name}</div>
+shtml`<div>${name}</div>
 <div>${formatSeconds(seconds)}</div>
 <div class="hover">
   <ul>

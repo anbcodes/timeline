@@ -22,3 +22,14 @@ export const eventEditor = {
   cancel: ensure<HTMLButtonElement>("#event-edit-cancel"),
   delete: ensure<HTMLButtonElement>("#event-edit-delete"),
 };
+
+export const eventViewer = {
+  dialog: ensure<HTMLDivElement>("#event-view-dialog"),
+  card: ensure<HTMLDivElement>("#event-view-card"),
+  name: ensure<HTMLDivElement>("#event-view-name"),
+  period: ensure<HTMLDivElement>("#event-view-period"),
+  tags: ensure<HTMLDivElement>("#event-view-tags"),
+  concurrentEvents: ensure<HTMLUListElement>("#event-view-concurrent-events"),
+  edit: ensure<HTMLDivElement>("#event-view-edit"),
+  close: ensure<HTMLDivElement>("#event-view-close"),
+}

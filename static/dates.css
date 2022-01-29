@@ -1,0 +1,8 @@
+.year {
+    position: absolute;
+    top: 75vh;
+    overflow: visible;
+    width: 7rem;
+    text-align: center;
+    cursor: text;
+}

@@ -29,7 +29,7 @@ render();
 addButton.addEventListener("click", startEventCreation);
 
 console.log(
-  "Hello! Welcome to the console! I wrote this project with Deno and the only library I used was oak for the server. I hope you like it :)",
+  "Hello! Welcome to the console! I wrote this project with using Deno and typescript. I hope you like it :)",
 );
 
 console.log();

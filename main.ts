@@ -116,25 +116,10 @@ const sendEvent = (username: string, name: string, id: string) => {
     Deno.writeTextFileSync(dataFile, JSON.stringify(users));
 }
 
-router.get('/', (ctx) => {
-    authenticate(ctx);
-    // ctx.response.body = html;
-    ctx.response.body = Deno.readTextFileSync('./static/index.html');
-    ctx.response.headers.set('Content-Type', 'text/html');
-})
-
-router.get('/index.js', (ctx) => {
+router.get('/events.js', (ctx) => {
     const {username} = authenticate(ctx);
-    // ctx.response.body = `window.timelineEvents = ${JSON.stringify(users[username].events)};\n` + js;
-    ctx.response.body = `window.timelineEvents = ${JSON.stringify(users[username].events)};\n` + Deno.readTextFileSync('./static/index.js');
+    ctx.response.body = `window.timelineEvents = ${JSON.stringify(users[username].events)};`;
     ctx.response.headers.set('Content-Type', 'application/javascript');
-})
-
-router.get('/style.css', (ctx) => {
-    authenticate(ctx);
-    // ctx.response.body = css;
-    ctx.response.body = Deno.readTextFileSync('./static/style.css');
-    ctx.response.headers.set('Content-Type', 'text/css');
 })
 
 router.post('/event', async (ctx) => {
@@ -188,6 +173,7 @@ router.get('/ws', (ctx) => {
     })
 })
 
+//error handler
 app.use(async (context, next) => {
     try {
       await next();
@@ -196,35 +182,36 @@ app.use(async (context, next) => {
         // deno-lint-ignore no-explicit-any
         context.response.status = e.status as any;
         if (e.expose) {
-          context.response.body = `<!DOCTYPE html>
-                <html>
-                  <body>
-                    <h1>${e.status} - ${e.message}</h1>
-                  </body>
-                </html>`;
+          context.response.body = `${e.status} - ${e.message}`;
         } else {
-          context.response.body = `<!DOCTYPE html>
-                <html>
-                  <body>
-                    <h1>${e.status} - ${Status[e.status]}</h1>
-                  </body>
-                </html>`;
+          context.response.body = `${e.status} - ${Status[e.status]}`;
         }
       } else if (e instanceof Error) {
         context.response.status = 500;
-        context.response.body = `<!DOCTYPE html>
-                <html>
-                  <body>
-                    <h1>500 - Internal Server Error</h1>
-                  </body>
-                </html>`;
+        context.response.body = `500 - Internal Server Error`;
         console.log("Unhandled Error:", e.message);
         console.log(e.stack);
       }
     }
   });
 
-
 app.use(router.routes())
 app.use(router.allowedMethods())
+
+app.use(async (ctx, next) => {
+    const root = `${Deno.cwd()}/static`
+    try {
+        await ctx.send({ root, index: 'index.html' })
+    } catch {
+        next()
+    }
+})
+
+app.use(ctx => {
+    ctx.response.status = Status.NotFound
+    ctx.response.body = `"${ctx.request.url}" not found`
+})
+
+app.addEventListener("listen", ({ port }) => console.log(`listening on port: ${port}`) )
+
 app.listen({ hostname: "0.0.0.0", port: 8080 })
