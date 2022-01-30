@@ -8,13 +8,22 @@ import { closeEventView } from "./eventViewController.ts";
 export let displayDialog = false;
 let currentlyEditing: (TimelineEvent & { id?: string }) | undefined;
 
+const dateZero = DateTime.fromObject({
+  year: 1,
+  month: 1,
+  day: 1,
+  hour: 0,
+  minute: 0,
+  second: 0,
+})
+
 export const startEventCreation = () => {
   displayDialog = true;
   eventEditor.error.textContent = "";
   currentlyEditing = {
     name: "",
-    start: +(localStorage.getItem("startSeconds") || 0),
-    end: +(localStorage.getItem("endSeconds") || 0),
+    start: +(localStorage.getItem("startSeconds") || dateZero.toSeconds()),
+    end: +(localStorage.getItem("endSeconds") || dateZero.toSeconds()),
     tags: "",
   };
   updateDisplay();
@@ -189,3 +198,6 @@ eventEditor.endBCAD.addEventListener("click", () => {
     eventEditor.endBCAD.textContent = "BC";
   }
 });
+
+eventEditor.form.addEventListener("scroll", stopPropagation);
+eventEditor.form.addEventListener("wheel", stopPropagation);

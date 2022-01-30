@@ -27,9 +27,9 @@ const getRandomString = (s: number) => {
     return ret;
 }
 
-const org = JSON.parse(Deno.readTextFileSync(Deno.args[0])) as {[id: number]: OldTimelineEvent};
+const org = JSON.parse(Deno.readTextFileSync(Deno.args[0])) as { [id: number]: OldTimelineEvent };
 
-const updated: {[id: string]: TimelineEvent} = {};
+const updated: { [id: string]: TimelineEvent } = {};
 
 Object.values(org).forEach(value => {
     const newId = getRandomString(12);
@@ -37,8 +37,10 @@ Object.values(org).forEach(value => {
     const endConverted = value.end < 0 ? value.end + 1 : value.end;
     updated[newId] = {
         name: value.name,
-        start: DateTime.fromObject({year: startConverted}).toSeconds(),
-        end: DateTime.fromObject({year: endConverted}).toSeconds(),
+        start: DateTime.fromObject({
+            year: startConverted,
+        }).toSeconds() + 2,
+        end: DateTime.fromObject({ year: endConverted }).toSeconds() + 2,
         tags: value.tags.join(', '),
     }
 });

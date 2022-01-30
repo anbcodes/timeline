@@ -207,6 +207,7 @@ app.use(router.allowedMethods());
 
 app.use(async (ctx, next) => {
   const root = `${Deno.cwd()}/static`;
+  authenticate(ctx);
   try {
     await ctx.send({ root, index: "index.html" });
   } catch {
