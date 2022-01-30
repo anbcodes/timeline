@@ -18,10 +18,12 @@ const ID_LENGTH = 12;
 
 const dataFile = Deno.args[0];
 
-let users: { [username: string]: {
-    password: string,
-    events: { [id: string]: TimelineEvent },
-} } = {};
+let users: {
+    [username: string]: {
+        password: string,
+        events: { [id: string]: TimelineEvent },
+    }
+} = {};
 
 try {
     users = JSON.parse(Deno.readTextFileSync(dataFile));
@@ -50,7 +52,7 @@ const authenticate = (ctx: Context) => {
             if (username && password) {
                 if (users[username]) {
                     if (users[username]?.password === password) {
-                        return {username, password}
+                        return { username, password }
                     }
                 }
             }
@@ -58,12 +60,12 @@ const authenticate = (ctx: Context) => {
             const error = new HttpError('Authorization required');
             error.status = Status.Unauthorized;
             ctx.response.headers.append("WWW-Authenticate", "Basic");
-            
+
             throw error;
         }
-        
+
     }
-    
+
     const error = new HttpError('Authorization required');
     error.status = Status.Unauthorized;
     ctx.response.headers.append("WWW-Authenticate", "Basic");
@@ -75,7 +77,7 @@ const parseBodyAsEvent = async (ctx: Context): Promise<TimelineEvent> => {
         const bodyJson = await ctx.request.body({
             type: 'json'
         }).value;
-        const {name, start, end, tags} = bodyJson;
+        const { name, start, end, tags } = bodyJson;
         if (typeof name === 'string' && typeof start === 'number' && typeof end === 'number' && typeof tags === 'string') {
             return {
                 name,
@@ -117,13 +119,13 @@ const sendEvent = (username: string, name: string, id: string) => {
 }
 
 router.get('/events.js', (ctx) => {
-    const {username} = authenticate(ctx);
+    const { username } = authenticate(ctx);
     ctx.response.body = `window.timelineEvents = ${JSON.stringify(users[username].events)};`;
     ctx.response.headers.set('Content-Type', 'application/javascript');
 })
 
 router.post('/event', async (ctx) => {
-    const {username} = authenticate(ctx);
+    const { username } = authenticate(ctx);
     const event = await parseBodyAsEvent(ctx);
     const id = getRandomString(ID_LENGTH);
     users[username].events[id] = event;
@@ -134,14 +136,14 @@ router.post('/event', async (ctx) => {
 })
 
 router.get('/event/:id', (ctx) => {
-    const {username} = authenticate(ctx);
+    const { username } = authenticate(ctx);
     if (ctx.params.id === "NaN") console.error('NaN detected (event get)');
     const event = users[username].events[ctx.params.id];
     ctx.response.body = event;
 })
 
 router.put('/event/:id', async (ctx) => {
-    const {username} = authenticate(ctx);
+    const { username } = authenticate(ctx);
     if (ctx.params.id === "NaN") console.error('NaN detected (event put)');
     const newEvent = await parseBodyAsEvent(ctx);
     users[username].events[ctx.params.id] = newEvent;
@@ -152,7 +154,7 @@ router.put('/event/:id', async (ctx) => {
 })
 
 router.delete('/event/:id', (ctx) => {
-    const {username} = authenticate(ctx);
+    const { username } = authenticate(ctx);
     if (ctx.params.id === "NaN") console.error('NaN detected (event delete)');
     delete users[username].events[ctx.params.id];
     sendEvent(username, 'delete', ctx.params.id);
@@ -162,7 +164,7 @@ router.delete('/event/:id', (ctx) => {
 })
 
 router.get('/ws', (ctx) => {
-    const {username} = authenticate(ctx);
+    const { username } = authenticate(ctx);
     if (!websockets[username]) {
         websockets[username] = [];
     }
@@ -176,30 +178,31 @@ router.get('/ws', (ctx) => {
 //error handler
 app.use(async (context, next) => {
     try {
-      await next();
+        await next();
     } catch (e) {
-      if (e instanceof HttpError) {
-        // deno-lint-ignore no-explicit-any
-        context.response.status = e.status as any;
-        if (e.expose) {
-          context.response.body = `${e.status} - ${e.message}`;
-        } else {
-          context.response.body = `${e.status} - ${Status[e.status]}`;
+        if (e instanceof HttpError) {
+            // deno-lint-ignore no-explicit-any
+            context.response.status = e.status as any;
+            if (e.expose) {
+                context.response.body = `${e.status} - ${e.message}`;
+            } else {
+                context.response.body = `${e.status} - ${Status[e.status]}`;
+            }
+        } else if (e instanceof Error) {
+            context.response.status = 500;
+            context.response.body = `500 - Internal Server Error`;
+            console.log("Unhandled Error:", e.message);
+            console.log(e.stack);
         }
-      } else if (e instanceof Error) {
-        context.response.status = 500;
-        context.response.body = `500 - Internal Server Error`;
-        console.log("Unhandled Error:", e.message);
-        console.log(e.stack);
-      }
     }
-  });
+});
 
 app.use(router.routes())
 app.use(router.allowedMethods())
 
 app.use(async (ctx, next) => {
     const root = `${Deno.cwd()}/static`
+    authenticate(ctx);
     try {
         await ctx.send({ root, index: 'index.html' })
     } catch {
@@ -212,6 +215,6 @@ app.use(ctx => {
     ctx.response.body = `"${ctx.request.url}" not found`
 })
 
-app.addEventListener("listen", ({ port }) => console.log(`listening on port: ${port}`) )
+app.addEventListener("listen", ({ port }) => console.log(`listening on port: ${port}`))
 
 app.listen({ hostname: "0.0.0.0", port: 8080 })
