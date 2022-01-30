@@ -196,16 +196,11 @@ const addEvent = (
 ) => {
   const seconds = part === "start" ? event.start : event.end;
   const prefix = part === "start" ? "Begin: " : (part === "end" ? "End: " : "");
-  const concurrentEvents =
-    (Object.values(window.timelineEvents) as TimelineEvent[]).filter((
-      { start, end },
-    ) => start > seconds && end < seconds);
   const lineHeight = hash(event.name) * 50;
 
   const eventCardElement = createEventCardElement(
     prefix + event.name,
     seconds,
-    concurrentEvents,
     lineHeight,
   );
   eventCardElement.addEventListener("pointerdown", stopPropagation);
@@ -224,17 +219,15 @@ const addEvent = (
 const createEventCardElement = (
   name: string,
   seconds: number,
-  concurrentEvents: TimelineEvent[],
   lineHeight: number,
 ) => {
-  const html = compileEventCardHTML(name, seconds, concurrentEvents);
+  const html = compileEventCardHTML(name, seconds);
 
   const text = document.createElement("div");
   text.innerHTML = html;
   text.className = "eventtext card";
-  text.style.left = `calc(${
-    secondsToOffsetInPixels(seconds)
-  }px - (var(--event-width) / 2))`;
+  text.style.left = `calc(${secondsToOffsetInPixels(seconds)
+    }px - (var(--event-width) / 2))`;
   text.style.top =
     `calc(var(--main-line-top) - ${lineHeight}vh - var(--event-height))`;
 
@@ -244,20 +237,9 @@ const createEventCardElement = (
 const compileEventCardHTML = (
   name: string,
   seconds: number,
-  concurrentEvents: TimelineEvent[],
 ) =>
   shtml`<div>${name}</div>
-<div>${formatSeconds(seconds)}</div>
-<div class="hover">
-  <ul>
-  ${
-    concurrentEvents
-      .map(({ name, start, end }) => `
-    <li>${name} (${formatSeconds(start)} - ${formatSeconds(end)})
-    `).join("")
-  }
-  </ul>
-</div>`;
+<div>${formatSeconds(seconds)}</div>`;
 
 const createEventLineElement = (seconds: number, lineHeight: number) => {
   const line = document.createElement("div");
@@ -312,9 +294,8 @@ const updateDatetimeMarkers = () => {
       yearText.textContent = formatSeconds(datetime.toSeconds(), yearInc);
       yearText.className = "year";
       yearText.style.top = `calc(${15 + extraHeight}px + var(--main-line-top))`;
-      yearText.style.left = `calc(${
-        secondsToOffsetInPixels(datetime.toSeconds())
-      }px - 4rem)`;
+      yearText.style.left = `calc(${secondsToOffsetInPixels(datetime.toSeconds())
+        }px - 4rem)`;
       yearText.addEventListener("pointerdown", stopPropagation);
       yearText.addEventListener("pointerup", stopPropagation);
       content.appendChild(yearText);
@@ -323,9 +304,8 @@ const updateDatetimeMarkers = () => {
       yearLine.className = "yearline";
       yearLine.style.height = `${10 + extraHeight}px`;
       // yearLine.style.top = `70vh`;
-      yearLine.style.left = `${
-        secondsToOffsetInPixels(datetime.toSeconds())
-      }px`;
+      yearLine.style.left = `${secondsToOffsetInPixels(datetime.toSeconds())
+        }px`;
       content.appendChild(yearLine);
     }
   }

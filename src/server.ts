@@ -1,5 +1,6 @@
 import { render } from "./rendering.ts";
 import { TimelineEvent } from "./types.ts";
+import { updateDisplayedEvent } from './eventViewController.ts';
 
 declare global {
   interface Window {
@@ -22,6 +23,7 @@ websocket.addEventListener('message', async (ev) => {
       && typeof timelineEvent.end === 'number' && typeof timelineEvent.tags === 'string'
     ) {
       window.timelineEvents[id] = timelineEvent;
+      updateDisplayedEvent();
       console.log("Add/update event", id);
       render();
     } else {
