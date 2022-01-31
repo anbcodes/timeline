@@ -2,3 +2,4 @@
 /data
 *.json
 !deno.jsonc
+!tutorial-events.json
