@@ -4,7 +4,7 @@ import { formatSeconds, shtml, stopPropagation } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
 import { displayEvent } from "./eventViewController.ts";
 import { makeNoise2D } from "https://deno.land/x/open_simplex_noise/mod.ts";
-import { DateTime, Duration } from "https://cdn.skypack.dev/luxon?dts";
+import { DateTime, Duration } from "luxon";
 
 declare global {
   interface Window {
@@ -226,8 +226,9 @@ const createEventCardElement = (
   const text = document.createElement("div");
   text.innerHTML = html;
   text.className = "eventtext card";
-  text.style.left = `calc(${secondsToOffsetInPixels(seconds)
-    }px - (var(--event-width) / 2))`;
+  text.style.left = `calc(${
+    secondsToOffsetInPixels(seconds)
+  }px - (var(--event-width) / 2))`;
   text.style.top =
     `calc(var(--main-line-top) - ${lineHeight}vh - var(--event-height))`;
 
@@ -294,8 +295,9 @@ const updateDatetimeMarkers = () => {
       yearText.textContent = formatSeconds(datetime.toSeconds(), yearInc);
       yearText.className = "year";
       yearText.style.top = `calc(${15 + extraHeight}px + var(--main-line-top))`;
-      yearText.style.left = `calc(${secondsToOffsetInPixels(datetime.toSeconds())
-        }px - 4rem)`;
+      yearText.style.left = `calc(${
+        secondsToOffsetInPixels(datetime.toSeconds())
+      }px - 4rem)`;
       yearText.addEventListener("pointerdown", stopPropagation);
       yearText.addEventListener("pointerup", stopPropagation);
       content.appendChild(yearText);
@@ -304,8 +306,9 @@ const updateDatetimeMarkers = () => {
       yearLine.className = "yearline";
       yearLine.style.height = `${10 + extraHeight}px`;
       // yearLine.style.top = `70vh`;
-      yearLine.style.left = `${secondsToOffsetInPixels(datetime.toSeconds())
-        }px`;
+      yearLine.style.left = `${
+        secondsToOffsetInPixels(datetime.toSeconds())
+      }px`;
       content.appendChild(yearLine);
     }
   }

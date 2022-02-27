@@ -3,3 +3,4 @@
 *.json
 !deno.jsonc
 !tutorial-events.json
+!import_map.json

@@ -1,5 +1,5 @@
-import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
-import { XmlEntities } from "https://deno.land/x/html_entities/mod.js";
+import { DateTime } from "luxon";
+import { XmlEntities } from "https://deno.land/x/html_entities@v1.0/mod.js";
 import { calcYearInc } from "./rendering.ts";
 
 export const partToPrefix = (part: "start" | "end" | "both") =>

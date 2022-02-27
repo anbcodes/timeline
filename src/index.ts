@@ -1,11 +1,11 @@
-import { render, setOffset, offset } from "./rendering.ts";
+import { offset, render, setOffset } from "./rendering.ts";
 import { addButton } from "./elements.ts";
 import { startEventCreation } from "./eventEditorController.ts";
 import "./grabbing.ts";
 import "./zooming.ts";
 import "./server.ts";
 import "./eventEditorController.ts";
-import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
+import { DateTime } from "luxon";
 
 const date = DateTime.fromObject({
   year: -1100,
@@ -34,7 +34,7 @@ console.log(
 
 console.log();
 
-addEventListener('resize', () => {
+addEventListener("resize", () => {
   setOffset(offset);
   render();
 });

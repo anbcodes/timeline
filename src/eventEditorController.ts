@@ -2,7 +2,7 @@ import { eventEditor } from "./elements.ts";
 import { stopPropagation } from "./util.ts";
 import { TimelineEvent } from "./types.ts";
 import { addEvent, removeEvent, updateEvent } from "./server.ts";
-import { DateTime } from "https://cdn.skypack.dev/luxon?dts";
+import { DateTime } from "luxon";
 import { closeEventView } from "./eventViewController.ts";
 
 export let displayDialog = false;
@@ -15,7 +15,7 @@ const dateZero = DateTime.fromObject({
   hour: 0,
   minute: 0,
   second: 0,
-})
+});
 
 export const startEventCreation = () => {
   displayDialog = true;
